@@ -1,0 +1,215 @@
+Sub AA_PO()
+
+Dim strDataRange As Range
+Dim keyRange As Range
+Set strDataRange = Range("A1:M400")
+Set keyRange = Range("L1")
+
+    strDataRange.Sort key1:=keyRange, order1:=xlDescending
+'Removes text wrap on row 1
+    Rows("1:1").Select
+    Application.CutCopyMode = False
+    With Selection
+        .WrapText = False
+        .Orientation = 0
+        .AddIndent = False
+        .IndentLevel = 0
+        .ShrinkToFit = False
+        .ReadingOrder = xlContext
+        .MergeCells = False
+    End With
+'Auto Fit Columns A-C
+    Range("A1").Select
+    ActiveCell.Columns("A:C").EntireColumn.Select
+    ActiveCell.Offset(0, 2).Range("A1").Activate
+    ActiveCell.Offset(0, -2).Columns("A:C").EntireColumn.EntireColumn.AutoFit
+'Delete empy columns H & I
+    Range("A1").Select
+    ActiveCell.Offset(0, 7).Columns("A:B").EntireColumn.Select
+    Selection.Delete Shift:=xlToLeft
+'Insert empy row on row 2
+    Rows("2:2").Select
+    Selection.Insert Shift:=xlDown, CopyOrigin:=xlFormatFromLeftOrAbove
+'Freze Pane row 1
+    Range("A3").Select
+    ActiveWindow.FreezePanes = True
+'Navigate to end of amount data
+    Range("J3").Select
+    Selection.End(xlDown).Select
+    
+    ' Insert row after column J
+Dim lastRowJ As Long: lastRowJ = Range("J" & Rows.Count).End(xlUp).Row
+    Range("J" & lastRowJ + 1).EntireRow.Insert
+
+' Sort by Column D
+Dim dynamicRange As Range
+' like keyboard shortcut Ctrl + A
+Set dynamicRange = Range("b7").CurrentRegion
+    ' sort by column D, Ascending, no header, as number
+    dynamicRange.Sort key1:=Range("d7"), order1:=xlAscending, Header:=xNo, DataOption1:=xlSortTextAsNumbers
+    
+End Sub
+
+Sub AB_TextCol()
+    Dim sht As Worksheet
+    Dim lastRow As Long: lastRow = Range("A" & Rows.Count).End(xlUp).Row
+    Set sht = ActiveSheet
+    
+    'sorts base on dollar vauel larger to smaller
+    sht.Sort.SortFields.Clear
+
+    With sht.Sort
+        .SortFields.Clear
+        .SetRange Range("A1:G" & lastRow)
+        .SortFields.Add Key:=Range("G1:G" & lastRow), Order:=xlDescending
+        .Header = xlNo
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+    
+    'deletes zero dollar values, for easy sort
+    For Each Rng In sht.Range("G1:G" & lastRow)
+    If Rng.Value = 0 Then Rng.Cells.ClearContents
+    Next
+    
+    sht.Sort.SortFields.Clear
+
+    With sht.Sort
+        .SortFields.Clear
+        .SetRange Range("A1:G" & lastRow)
+        .SortFields.Add Key:=Range("G1:G" & lastRow), Order:=xlDescending
+        .Header = xlNo
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+    
+    'inserts row after rows with dollar values
+    Dim lastRowG As Long: lastRowG = Range("G" & Rows.Count).End(xlUp).Row
+    Range("G" & lastRowG + 1).EntireRow.Insert
+    
+    'sorts based on mfg number
+    sht.Sort.SortFields.Clear
+    With sht.Sort
+        .SortFields.Clear
+        .SetRange Range("A1:G" & lastRowG)
+        .SortFields.Add Key:=Range("C1"), _
+        SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:= _
+        xlSortTextAsNumbers
+        .Header = xlNo
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+    
+    AC_CpyPst
+End Sub
+
+Sub AC_CpyPst()
+    Dim lastRow As Long: lastRow = Range("A" & Rows.Count).End(xlUp).Row
+
+    Sheets("Sheet1").Select
+    Range("A1:G" & lastRow).Select
+    Application.CutCopyMode = False
+    Selection.Copy
+    ActiveSheet.Previous.Select
+    Range("O3").Select
+    ActiveSheet.Paste
+    Range("O2").Select
+    
+    
+    AD_DupVal
+End Sub
+
+Sub AD_DupVal()
+'
+    Range("Q:Q,D:D").Select
+    Range("D1").Activate
+    Selection.FormatConditions.AddUniqueValues
+    Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
+    Selection.FormatConditions(1).DupeUnique = xlDuplicate
+    With Selection.FormatConditions(1).Font
+        .Color = -16383844
+        .TintAndShade = 0
+    End With
+    With Selection.FormatConditions(1).Interior
+        .PatternColorIndex = xlAutomatic
+        .Color = 13551615
+        .TintAndShade = 0
+    End With
+    Selection.FormatConditions(1).StopIfTrue = False
+   
+   AE_SortbyColorInv
+End Sub
+Sub AE_SortbyColorInv()
+    Dim sht As Worksheet
+    Dim lastRow As Long: lastRow = Range("U" & Rows.Count).End(xlUp).Row
+    Set sht = ActiveSheet
+
+    sht.Sort.SortFields.Clear
+    sht.Sort.SortFields.Add(Range("Q3"), _
+        xlSortOnCellColor, xlAscending, , _
+        xlSortNormal).SortOnValue.Color = RGB(255, 199, 206)
+
+    With sht.Sort
+        .SetRange Range("O3:U" & lastRow)
+        .Header = xlNo
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+    
+    AF_SortbyColorPO
+End Sub
+Sub AF_SortbyColorPO()
+    Dim sht As Worksheet
+    Dim lastRow As Long: lastRow = Range("J" & Rows.Count).End(xlUp).Row
+    Set sht = ActiveSheet
+
+    sht.Sort.SortFields.Clear
+    sht.Sort.SortFields.Add(Range("D3"), _
+        xlSortOnCellColor, xlAscending, , _
+        xlSortNormal).SortOnValue.Color = RGB(255, 199, 206)
+
+    With sht.Sort
+        .SetRange Range("A3:K" & lastRow)
+        .Header = xlNo
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+    
+    AG_UPPsum
+End Sub
+
+Sub AG_UPPsum()
+'
+    Dim lastRow As Long
+    lastRow = Range("A" & Rows.Count).End(xlUp).Row
+
+    
+    Range("J2").Select
+    ActiveCell.FormulaR1C1 = "=SUM(R[1]C:R[348]C)"
+    Range("U2").Select
+    ActiveCell.FormulaR1C1 = "=SUM(R[1]C:R[350]C)"
+    Range("M3").Select
+    ActiveCell.FormulaR1C1 = "=RC[-9]-RC[4]"
+    Range("N3").Select
+    ActiveCell.FormulaR1C1 = "=RC[-4]-RC[7]"
+    Range("Q2").Select
+    ActiveCell.FormulaR1C1 = "=RC[4]+RC[-3]"
+    
+    Range("N3").AutoFill Destination:=Range("N3:n" & lastRow)
+    Range("M3").AutoFill Destination:=Range("M3:m" & lastRow)
+
+    Range("S:T").EntireColumn.AutoFit
+    Range("N2").Select
+    
+    ActiveWorkbook.Save
+End Sub
